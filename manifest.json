@@ -6,7 +6,8 @@
     "content_scripts": [
         {
             "matches": ["https://*.twitch.tv/*"],
-            "js": ["document-start.js"]
+            "js": ["twitch-points-extension.js"],
+            "run_at": "document_start"
         }
     ],
     "web_accessible_resources": [
