@@ -49,7 +49,7 @@ class TwitchPointsCollector {
                         channelName: this.channelName
                     }
                     console.log(`Points collected: ${message}`)
-                    browser.runtime.sendMessage(message);
+                    chrome.runtime.sendMessage(message);
                 })
                 pointsButton.click()
             })
