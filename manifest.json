@@ -3,6 +3,9 @@
     "name": "Twitch Points",
     "description": "Extension which automatically claims Twitch points",
     "version": "1.0",
+    "background": {
+        "service_worker": "background.js"
+    },
     "content_scripts": [
         {
             "matches": ["https://*.twitch.tv/*"],
