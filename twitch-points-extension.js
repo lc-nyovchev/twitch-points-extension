@@ -1,33 +1,47 @@
+class TwitchPointsCollectorUtils {
+    async waitForElement(selector) {
+        return new Promise((resolve) => {
+            if (document.querySelector(selector)) {
+                return resolve(document.querySelector(selector))
+            }
+            const observer = new MutationObserver(() => {
+                if (document.querySelector(selector)) {
+                    observer.disconnect()
+                    resolve(document.querySelector(selector))
+                }
+            })
+            observer.observe(document.body, {childList: true, subtree: true})
+        })
+    }
+}
+
 class TwitchPointsCollector {
-    constructor(intervalTimeoutInMs = 5000) {
-        this.intervalTimeoutInMs = intervalTimeoutInMs
-        this.interval = null
+    constructor() {
+        this.started = false
+        this.twitchPointsCollectorUtils = new TwitchPointsCollectorUtils()
     }
-    get started() {
-        return !!this.interval
+    get buttonSelector() {
+        return '.community-points-summary .tw-transition button'
     }
-    get button() {
-        return document.querySelector(
-            '.community-points-summary .tw-transition button'
-        )
+    get pointsSelector() {
+        return '.community-points-summary__points-add-text'
     }
-    collectPoints() {
-        console.info(`Checking for points...`)
-        const button = this.button
-        if (button) {
-            button.click()
-            console.info('Juicy points!')
-        }
+    parsePoints(scoreElement) {
+        return parseInt(scoreElement.textContent.slice(1), 10)
     }
     startCollectingPoints() {
         if (this.started) {
             console.debug('Already collecting points')
         } else {
+            this.started = true
             console.debug('Started collecting points')
-            this.interval = setInterval(
-                this.collectPoints.bind(this),
-                this.intervalTimeoutInMs
-            )
+            this.twitchPointsCollectorUtils.waitForElement(this.buttonSelector).then((pointsButton) => {
+                this.twitchPointsCollectorUtils.waitForElement(this.pointsSelector).then((scoreElement) => {
+                    const points = this.parsePoints(scoreElement)
+                    console.log(`Juicy points: ${points}`)
+                })
+                pointsButton.click()
+            })
         }
     }
     stopCollectingPoints() {
@@ -35,8 +49,7 @@ class TwitchPointsCollector {
             console.debug('Already stopped')
         } else {
             console.debug('Stopping collecting points')
-            clearInterval(this.interval)
-            this.interval = null
+            this.started = false
         }
     }
 }
