@@ -1,14 +1,15 @@
 class TwitchPointsStorage {
-    async getPoints(chanelName) {
-        const score = await chrome.storage.sync.get(chanelName);
+    async getPoints(channelName) {
+        const scoreObj = await chrome.storage.sync.get()
+        const score = parseInt(scoreObj[channelName], 10)
         if (score) {
             return score
         }
         return 0
     }
     async setPoints(channelName, points) {
-        console.log(`Points for ${channelName} set to ${points}`)
-        return await chrome.storage.sync.set({channelName: points})
+        console.debug(`Points for ${channelName} set to ${points}`)
+        return await chrome.storage.sync.set({[channelName]: points})
     }
 }
 
