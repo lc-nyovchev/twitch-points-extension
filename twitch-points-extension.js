@@ -35,23 +35,27 @@ class TwitchPointsCollector {
     parsePoints(scoreElement) {
         return parseInt(scoreElement.textContent.slice(1), 10)
     }
-    startCollectingPoints() {
+    async preparePointsMessage() {
+        const pointsButton =  await this.twitchPointsCollectorUtils.waitForElement(this.buttonSelector)
+        const pointsMessagePromise = this.twitchPointsCollectorUtils.waitForElement(this.pointsSelector).then((scoreElement) => {
+            return {
+                type: 'twitchPoints',
+                points: this.parsePoints(scoreElement),
+                channelName: this.channelName
+            }
+        })
+        pointsButton.click()
+        return pointsMessagePromise
+    }
+    async startCollectingPoints() {
         if (this.started) {
             console.debug('Already collecting points')
         } else {
             this.started = true
             console.debug('Started collecting points')
-            this.twitchPointsCollectorUtils.waitForElement(this.buttonSelector).then((pointsButton) => {
-                this.twitchPointsCollectorUtils.waitForElement(this.pointsSelector).then((scoreElement) => {
-                    const message = {
-                        type: 'twitchPoints',
-                        points: this.parsePoints(scoreElement),
-                        channelName: this.channelName
-                    }
-                    console.debug(`Points collected: ${message}`)
-                    chrome.runtime.sendMessage(message);
-                })
-                pointsButton.click()
+            chrome.runtime.sendMessage(await this.preparePointsMessage())
+            return new Promise((resolve) => {
+                resolve(this.startCollectingPoints())
             })
         }
     }
