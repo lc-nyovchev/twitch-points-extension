@@ -2,26 +2,24 @@
     "manifest_version": 3,
     "name": "Twitch Points",
     "description": "Extension which automatically claims Twitch points",
-    "version": "1.0",
+    "version": "1.1",
+    "icons": {
+        "48": "icons/48x-twitch-points-extension.png",
+        "128": "icons/128x-twitch-points-extension.png"
+    },
     "background": {
-        "service_worker": "background.js"
+        "service_worker": "src/background.js"
     },
     "content_scripts": [
         {
             "matches": ["https://*.twitch.tv/*"],
-            "js": ["twitch-points-extension.js"],
+            "js": ["src/twitch-points-extension.js"],
             "run_at": "document_end"
-        }
-    ],
-    "web_accessible_resources": [
-        {
-            "resources": ["twitch-points-extension.js"],
-            "matches": ["https://*.twitch.tv/*"]
         }
     ],
     "permissions": ["storage"],
     "action": {
-        "default_popup": "twitch-points-extension.html",
-        "default_icon": "twitch-points-extension.png"
+        "default_popup": "src/twitch-points-extension.html",
+        "default_icon": "icons/twitch-points-extension.png"
     }
 }
