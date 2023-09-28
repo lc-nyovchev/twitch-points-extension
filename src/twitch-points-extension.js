@@ -17,7 +17,6 @@ class TwitchPointsCollectorUtils {
 
 class TwitchPointsCollector {
     constructor() {
-        this.started = false
         this.twitchPointsCollectorUtils = new TwitchPointsCollectorUtils()
     }
     get buttonSelector() {
@@ -48,16 +47,11 @@ class TwitchPointsCollector {
         return pointsMessagePromise
     }
     async startCollectingPoints() {
-        if (this.started) {
-            console.debug('Already collecting points')
-        } else {
-            this.started = true
-            console.debug('Started collecting points')
-            chrome.runtime.sendMessage(await this.preparePointsMessage())
-            return new Promise((resolve) => {
-                resolve(this.startCollectingPoints())
-            })
-        }
+        console.debug('Started collecting points')
+        chrome.runtime.sendMessage(await this.preparePointsMessage())
+        return new Promise((resolve) => {
+            resolve(this.startCollectingPoints())
+        })
     }
 }
 
