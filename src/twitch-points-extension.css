@@ -1,0 +1,14 @@
+.container {
+    display: flex;
+    flex-flow: column;
+    align-items: center;
+    justify-content: center;
+    min-width: 280px;
+}
+.title {
+    flex: 1 100%;
+}
+
+.points {
+    flex: 1 100%;
+}
