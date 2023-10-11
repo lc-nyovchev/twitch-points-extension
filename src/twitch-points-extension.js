@@ -17,6 +17,7 @@ class TwitchPointsCollectorUtils {
 
 class TwitchPointsCollector {
     constructor() {
+        this.points = {}
         this.twitchPointsCollectorUtils = new TwitchPointsCollectorUtils()
     }
     get buttonSelector() {
