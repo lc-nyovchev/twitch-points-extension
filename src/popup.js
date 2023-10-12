@@ -16,7 +16,6 @@ class TwitchInterfaceUpdater {
         const pointsValuesDiv = document.querySelector(this.pointsValuesSelector)
         pointsValuesDiv.innerHTML = ''
         for (const point of points) {
-            console.log(point)
             pointsValuesDiv.appendChild(this.createPointElement(point.channelName, point.score))
         }
     }
