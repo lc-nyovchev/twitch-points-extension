@@ -5,10 +5,16 @@
     justify-content: center;
     min-width: 280px;
 }
-.title {
-    flex: 1 100%;
-}
 
 .points {
     flex: 1 100%;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th {
+    font-weight: bold;
 }

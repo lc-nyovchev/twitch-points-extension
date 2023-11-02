@@ -14,21 +14,21 @@ class TwitchInterfaceUpdater {
     async updateInterface() {
         const points = await this.getPoints()
         const pointsValuesDiv = document.querySelector(this.pointsValuesSelector)
-        pointsValuesDiv.innerHTML = ''
+        pointsValuesDiv.innerHTML = '<tr><th>Channel Name</th><th>Points</th></tr>'
         for (const point of points) {
             pointsValuesDiv.appendChild(this.createPointElement(point.channelName, point.score))
         }
     }
     createPointElement(channelName, score) {
-        const el = document.createElement('div')
-        el.innerText = `channelName: ${channelName}, score: ${score}`
-        el.className = 'points-values-entry'
+        const el = document.createElement('tr')
+        el.innerHTML = `<td>${channelName}</td><td>${score}</td>`
         return el
     }
 }
 
 const twitchInterfaceUpdater = new TwitchInterfaceUpdater()
 
+twitchInterfaceUpdater.updateInterface()
 setInterval(() => {
     twitchInterfaceUpdater.updateInterface()
 }, twitchInterfaceUpdater.refreshInterval)
