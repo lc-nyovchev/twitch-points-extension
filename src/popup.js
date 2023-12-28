@@ -1,6 +1,9 @@
+const {tr, td, th, input} = van.tags
+
 class TwitchInterfaceUpdater {
-    constructor(refreshInterval = 5000) {
+    constructor(refreshInterval = 5000, points = {}) {
         this.refreshInterval = refreshInterval
+        this.points = points
     }
 
     get pointsValuesSelector() {
@@ -15,33 +18,58 @@ class TwitchInterfaceUpdater {
     }
 
     async updateInterface() {
-        const points = await this.getPoints()
-        const pointsValuesDiv = document.querySelector(this.pointsValuesSelector)
-        pointsValuesDiv.innerHTML = '<tr><th>Channel Name</th><th>Points</th><th>Clear</th></tr>'
-        for (const point of points) {
-            pointsValuesDiv.appendChild(this.createPointElement(point.channelName, point.score))
+        if (await this.isChanged()) {
+            const points = await this.getPoints()
+            const pointsValuesDiv = document.querySelector(this.pointsValuesSelector)
+            van.add(pointsValuesDiv, this.createHeader())
+            for (const point of points) {
+                van.add(pointsValuesDiv, this.createPointsRow(point.channelName, point.score))
+            }
         }
     }
 
-    createPointElement(channelName, score) {
-        const el = document.createElement('tr')
-        el.innerHTML = `
-            <td>${channelName}</td>
-            <td>${score}</td>
-            <td><input type="button" value="x"></td>
-        `
+    async isChanged() {
+        const newPoints = await this.getPoints()
+        const changed = JSON.stringify(Object.entries(newPoints).sort()) !== JSON.stringify(Object.entries(this.points).sort())
+        if (changed) {
+            this.points = newPoints
+        }
+        return changed
+    }
+
+    createHeader() {
+        return tr(
+            th('ChannelName'),
+            th('Points'),
+            th('Clear')
+        )
+    }
+
+    createPointsRow(channelName, score) {
         const self = this
-        el.children[2].addEventListener('click', async () => {
-            await chrome.storage.sync.remove(channelName)
-            await self.updateInterface()
-        })
-        return el
+        return tr(
+            td(channelName),
+            td(score),
+            td(
+                input({
+                    type: 'button',
+                    value: 'x',
+                    onclick: async () => {
+                        await chrome.storage.sync.remove(channelName)
+                        await self.updateInterface()
+                    }
+                })
+            )
+        )
     }
 }
 
 const twitchInterfaceUpdater = new TwitchInterfaceUpdater()
+twitchInterfaceUpdater.updateInterface().then(() => {
+    setInterval(async () => {
+        if (await twitchInterfaceUpdater.isChanged()) {
+            await twitchInterfaceUpdater.updateInterface()
+        }
+    }, twitchInterfaceUpdater.refreshInterval)
 
-twitchInterfaceUpdater.updateInterface()
-setInterval(() => {
-    twitchInterfaceUpdater.updateInterface()
-}, twitchInterfaceUpdater.refreshInterval)
+})
