@@ -63,10 +63,8 @@ class InterfaceElementsBuilder {
     }
 
     createColorPaletteSwitcher(state) {
-        const txt = van.derive(() => state.colorPalette)
-        const cls = van.derive(() => `container ${state.colorPalette}`)
-        return div({class: cls},
-            text(txt),
+        return div({class: () => `container ${state.colorPalette}`},
+            text(() => state.colorPalette),
             input({
                 type: 'button',
                 value: 'x',
