@@ -4,7 +4,8 @@ const CONSTANTS = {
     COLOR_PALETTES: {
         DARK: 'dark',
         LIGHT: 'light'
-    }
+    },
+    HEADER_CONSTANT: 'TWITCH_POINTS_EXTENSION_HEADER'
 }
 
 class InterfaceElementsBuilder {
@@ -33,10 +34,14 @@ class InterfaceElementsBuilder {
     }
 
     createTable(points) {
+        const rowsData = van.derive(() => {
+            const header = {'TWITCH_POINTS_EXTENSION_HEADER': 420}
+            return [header, ...points]
+        })
         return vanX.list(
-            () => table({class: 'points-values'}, this.createTableHeader()),
+            () => table({class: 'points-values'}),
             points,
-            (scoreRef, deleter, channelName) => this.createTableRow(scoreRef, deleter, channelName)
+            (score, deleter, channelName) => this.createTableRow(score, deleter, channelName)
         )
     }
 
@@ -48,15 +53,19 @@ class InterfaceElementsBuilder {
         )
     }
 
-    createTableRow(scoreRef, deleter, channelName) {
+    createTableRow(score, deleter, channelName) {
+        if (channelName === CONSTANTS.HEADER_CONSTANT) {
+            return this.createTableHeader()
+        }
         return tr(
             td(channelName),
-            td(scoreRef),
+            td(score),
             td(input({
                 type: 'button',
                 value: 'x',
                 onclick: async () => {
-                    delete this.state.points[channelName]
+                    await chrome.storage.sync.remove(channelName)
+                    deleter()
                 }
             }))
         )
@@ -81,10 +90,10 @@ class InterfaceElementsBuilder {
 }
 
 class TwitchInterfaceUpdater {
-    constructor(refreshInterval = 5000, points = []) {
+    constructor(refreshInterval = 5000, points = {}) {
         this.refreshInterval = refreshInterval
         this.state = vanX.reactive({
-            points: points,
+            points: Object.assign(points, {[CONSTANTS.HEADER_CONSTANT]: 420}),
             colorPalette: CONSTANTS.COLOR_PALETTES.LIGHT
         })
         setTimeout(() => {
