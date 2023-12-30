@@ -1,4 +1,4 @@
-const {div, tr, td, th, input} = van.tags
+const {h1, h4, table, div, tr, td, th, input} = van.tags
 
 
 class InterfaceElementsBuilder {
@@ -7,13 +7,38 @@ class InterfaceElementsBuilder {
         LIGHT: 'light'
     }
 
-    constructor(twitchInterfaceUpdater) {
-        this.twitchInterfaceUpdater = twitchInterfaceUpdater
+    constructor(points) {
+        this.points = points
+        this.colorPalette = van.state(this.COLOR_PALETTES.LIGHT)
     }
 
-    colorPalette = van.state(this.COLOR_PALETTES.LIGHT)
+    createContainer() {
+        return div(
+            {class: 'container'},
+            this.createHeader(),
+            this.createDedication(),
+            this.createColorPaletteSwitcher(),
+            this.createTable()
+        )
+    }
 
     createHeader() {
+        return h1('Twitch Points Extension')
+    }
+
+    createDedication() {
+        return h4('With ❤️ to Hania')
+    }
+
+    createTable() {
+        return table(
+            {class: 'points-values'},
+            this.createTableHeader(),
+            Object.entries(this.points.val).map(entry => this.createTableRow(entry[1].channelName,  entry[1].score))
+        )
+    }
+
+    createTableHeader() {
         return tr(
             th('ChannelName'),
             th('Points'),
@@ -21,8 +46,7 @@ class InterfaceElementsBuilder {
         )
     }
 
-    createPointsRow(channelName, score) {
-        const self = this
+    createTableRow(channelName, score) {
         return tr(
             td(channelName),
             td(score),
@@ -31,8 +55,8 @@ class InterfaceElementsBuilder {
                     type: 'button',
                     value: 'x',
                     onclick: async () => {
-                        await chrome.storage.sync.remove(channelName)
-                        await self.twitchInterfaceUpdater.updateInterface()
+                      //  await chrome.storage.sync.remove(channelName)
+                        this.points.val = [...this.points.val.filter(point => point.channelName !== channelName)]
                     }
                 })
             )
@@ -40,17 +64,16 @@ class InterfaceElementsBuilder {
     }
 
     createColorPaletteSwitcher() {
-        const self = this
         return div({class: this.colorPalette},
             this.colorPalette,
             input({
                 type: 'button',
                 value: 'x',
                 onclick: () => {
-                    if (self.colorPalette.val === self.COLOR_PALETTES.LIGHT) {
-                        self.colorPalette.val = self.COLOR_PALETTES.DARK
+                    if (this.colorPalette.val === this.COLOR_PALETTES.LIGHT) {
+                        this.colorPalette.val = this.COLOR_PALETTES.DARK
                     } else {
-                        self.colorPalette.val = self.COLOR_PALETTES.LIGHT
+                        this.colorPalette.val = this.COLOR_PALETTES.LIGHT
                     }
                 }
             })
@@ -59,14 +82,11 @@ class InterfaceElementsBuilder {
 }
 
 class TwitchInterfaceUpdater {
-    constructor(refreshInterval = 5000, points = {}) {
+    constructor(refreshInterval = 5000, points = []) {
         this.refreshInterval = refreshInterval
-        this.points = points
-        this.interfaceElementsBuilder = new InterfaceElementsBuilder(this)
-    }
-
-    get pointsValuesSelector() {
-        return '.points-values'
+        this.points = van.state(points)
+        van.derive(() => console.log('aaa', this.points.val))
+        this.interfaceElementsBuilder = new InterfaceElementsBuilder(this.points)
     }
 
     async getPoints() {
@@ -76,35 +96,21 @@ class TwitchInterfaceUpdater {
         })
     }
 
-    async updateInterface() {
-        if (await this.isChanged()) {
-            const points = await this.getPoints()
-            const pointsValuesDiv = document.querySelector(this.pointsValuesSelector)
-            pointsValuesDiv.innerHTML = ''
-            van.add(pointsValuesDiv, this.interfaceElementsBuilder.createHeader())
-            for (const point of points) {
-                van.add(pointsValuesDiv, this.interfaceElementsBuilder.createPointsRow(point.channelName, point.score))
-            }
-            van.add(pointsValuesDiv, this.interfaceElementsBuilder.createColorPaletteSwitcher())
-        }
+    createInterface() {
+        van.add(document.body, this.interfaceElementsBuilder.createContainer())
     }
 
-    async isChanged() {
-        const newPoints = await this.getPoints()
-        const changed = JSON.stringify(Object.entries(newPoints).sort()) !== JSON.stringify(Object.entries(this.points).sort())
-        if (changed) {
-            this.points = newPoints
-        }
-        return changed
+    async checkForChanges() {
+        this.points.val = await this.getPoints()
+
     }
 }
 
 const twitchInterfaceUpdater = new TwitchInterfaceUpdater()
-twitchInterfaceUpdater.updateInterface().then(() => {
-    setInterval(async () => {
-        if (await twitchInterfaceUpdater.isChanged()) {
-            await twitchInterfaceUpdater.updateInterface()
-        }
-    }, twitchInterfaceUpdater.refreshInterval)
-
+twitchInterfaceUpdater.checkForChanges().then(() => {
+    twitchInterfaceUpdater.createInterface()
 })
+
+setInterval(async () => {
+    await twitchInterfaceUpdater.checkForChanges()
+}, twitchInterfaceUpdater.refreshInterval)
