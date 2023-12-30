@@ -1,23 +1,26 @@
-const {h1, h4, table, div, tr, td, th, input} = van.tags
+const {h1, h4, table, div, tr, td, th, input, text} = van.tags
 
-class InterfaceElementsBuilder {
-    COLOR_PALETTES = {
+const CONSTANTS = {
+    COLOR_PALETTES: {
         DARK: 'dark',
         LIGHT: 'light'
     }
+}
 
-    constructor(points) {
-        this.points = points
-        this.colorPalette = van.state(this.COLOR_PALETTES.LIGHT)
+class InterfaceElementsBuilder {
+
+
+    constructor(state) {
+        this.state = state
     }
 
     createContainer() {
         return div(
-            {class: 'container'},
+            {class: `container ${this.state.colorPalette}`},
             this.createHeader(),
             this.createDedication(),
-            this.createColorPaletteSwitcher(this.colorPalette),
-            this.createTable(this.points)
+            this.createColorPaletteSwitcher(this.state),
+            this.createTable(this.state.points)
         )
     }
 
@@ -30,11 +33,11 @@ class InterfaceElementsBuilder {
     }
 
     createTable(points) {
-        return vanX.list(() =>
-            table(
-                {class: 'points-values'},
-                this.createTableHeader()
-            ), points, this.createTableRow)
+        return vanX.list(
+            () => table({class: 'points-values'}, this.createTableHeader()),
+            points,
+            (scoreRef, deleter, channelName) => this.createTableRow(scoreRef, deleter, channelName)
+        )
     }
 
     createTableHeader() {
@@ -53,23 +56,25 @@ class InterfaceElementsBuilder {
                 type: 'button',
                 value: 'x',
                 onclick: async () => {
-                    delete points[channelName]
+                    delete this.state.points[channelName]
                 }
             }))
         )
     }
 
-    createColorPaletteSwitcher(colorPalette) {
-        return div({class: colorPalette},
-            this.colorPalette,
+    createColorPaletteSwitcher(state) {
+        const txt = van.derive(() => state.colorPalette)
+        const cls = van.derive(() => `container ${state.colorPalette}`)
+        return div({class: cls},
+            text(txt),
             input({
                 type: 'button',
                 value: 'x',
                 onclick: () => {
-                    if (colorPalette.val === this.COLOR_PALETTES.LIGHT) {
-                        colorPalette.val = this.COLOR_PALETTES.DARK
+                    if (state.colorPalette === CONSTANTS.COLOR_PALETTES.LIGHT) {
+                        state.colorPalette = CONSTANTS.COLOR_PALETTES.DARK
                     } else {
-                        colorPalette.val = this.COLOR_PALETTES.LIGHT
+                        state.colorPalette = CONSTANTS.COLOR_PALETTES.LIGHT
                     }
                 }
             })
@@ -80,8 +85,14 @@ class InterfaceElementsBuilder {
 class TwitchInterfaceUpdater {
     constructor(refreshInterval = 5000, points = []) {
         this.refreshInterval = refreshInterval
-        this.points = vanX.reactive(points)
-        this.interfaceElementsBuilder = new InterfaceElementsBuilder(this.points)
+        this.state = vanX.reactive({
+            points: points,
+            colorPalette: CONSTANTS.COLOR_PALETTES.LIGHT
+        })
+        setTimeout(() => {
+            this.state.points['a'] = 520
+        }, 5000)
+        this.interfaceElementsBuilder = new InterfaceElementsBuilder(this.state)
     }
 
     async getPoints() {
@@ -95,8 +106,8 @@ class TwitchInterfaceUpdater {
     async checkForChanges() {
         const newPoints = await this.getPoints()
         for (const point in newPoints) {
-            if (!this.points.hasOwnProperty(point)) {
-                this.points[point] = newPoints[point]
+            if (!this.state.points.hasOwnProperty(point)) {
+                this.state.points[point] = newPoints[point]
             }
         }
     }
