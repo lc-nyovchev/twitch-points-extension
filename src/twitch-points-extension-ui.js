@@ -1,4 +1,4 @@
-const {h1, h4, table, div, tr, td, th, input, text} = van.tags
+const {h1, h3, table, div, tr, td, th, input, text} = van.tags
 
 const CONSTANTS = {
     COLOR_PALETTES: {
@@ -17,7 +17,7 @@ class InterfaceElementsBuilder {
 
     createContainer() {
         return div(
-            {class: `container ${this.state.colorPalette}`},
+            {class: () => `container ${this.state.colorPalette}`},
             this.createHeader(),
             this.createDedication(),
             this.createColorPaletteSwitcher(this.state),
@@ -30,14 +30,10 @@ class InterfaceElementsBuilder {
     }
 
     createDedication() {
-        return h4('With ❤️ to Hania')
+        return h3('With ❤️ to Hania')
     }
 
     createTable(points) {
-        const rowsData = van.derive(() => {
-            const header = {'TWITCH_POINTS_EXTENSION_HEADER': 420}
-            return [header, ...points]
-        })
         return vanX.list(
             () => table({class: 'points-values'}),
             points,
@@ -49,7 +45,7 @@ class InterfaceElementsBuilder {
         return tr(
             th('ChannelName'),
             th('Points'),
-            th('Clear')
+            th('Delete')
         )
     }
 
@@ -60,19 +56,22 @@ class InterfaceElementsBuilder {
         return tr(
             td(channelName),
             td(score),
-            td(input({
-                type: 'button',
-                value: 'x',
-                onclick: async () => {
-                    await chrome.storage.sync.remove(channelName)
-                    deleter()
-                }
-            }))
+            td(
+                div({
+                        class: 'clear-button',
+                        onclick: async () => {
+                            await chrome.storage.sync.remove(channelName)
+                            deleter()
+                        }
+                    },
+                    '❌'
+                )
+            )
         )
     }
 
     createColorPaletteSwitcher(state) {
-        return div({class: () => `container ${state.colorPalette}`},
+        return div(
             text(() => state.colorPalette),
             input({
                 type: 'button',
