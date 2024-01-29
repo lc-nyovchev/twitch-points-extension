@@ -13,6 +13,10 @@
     display: inline-flex;
 }
 
+.color-switcher {
+    margin-bottom: 10px;
+}
+
 .container {
     padding: 12px;
     display: flex;

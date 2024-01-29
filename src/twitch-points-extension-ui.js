@@ -1,15 +1,34 @@
-const {h1, h3, table, div, tr, td, th, input, text} = van.tags
+const {h1, h3, table, div, tr, td, th, input, text, i} = van.tags
 
 const CONSTANTS = {
     COLOR_PALETTES: {
         DARK: 'dark',
-        LIGHT: 'light'
+        LIGHT: 'light',
+        DEFAULT: 'dark'
     },
+    COLOR_PALETTES_THEME_STORE_KEY: 'TWITCH_POINTS_STORAGE_THEME',
     HEADER_CONSTANT: 'TWITCH_POINTS_EXTENSION_HEADER'
 }
 
-class InterfaceElementsBuilder {
+const ThemeUtils = {
+    async setTheme(theme) {
+        if (theme !== CONSTANTS.COLOR_PALETTES.DARK && theme !== CONSTANTS.COLOR_PALETTES.LIGHT) {
+            console.error(`Supported themes are only ${CONSTANTS.COLOR_PALETTES.DARK} and ${CONSTANTS.COLOR_PALETTES.LIGHT}`)
+        }
+        return await chrome.storage.sync.set({[CONSTANTS.COLOR_PALETTES_THEME_STORE_KEY]: theme})
+    },
+    async getTheme() {
+        const store = await chrome.storage.sync.get()
+        const currentTheme = store[CONSTANTS.COLOR_PALETTES_THEME_STORE_KEY]
+        if ((currentTheme !== CONSTANTS.COLOR_PALETTES.DARK && currentTheme !== CONSTANTS.COLOR_PALETTES.LIGHT)) {
+            return CONSTANTS.COLOR_PALETTES.DEFAULT
+        } else {
+            return currentTheme
+        }
+    }
+}
 
+class InterfaceElementsBuilder {
 
     constructor(state) {
         this.state = state
@@ -64,7 +83,7 @@ class InterfaceElementsBuilder {
                             deleter()
                         }
                     },
-                    '❌'
+                    i({class: 'fa-solid fa-trash'})
                 )
             )
         )
@@ -72,37 +91,42 @@ class InterfaceElementsBuilder {
 
     createColorPaletteSwitcher(state) {
         return div(
+            {
+                class: 'clear-button color-switcher',
+                onclick: async () => {
+                    const theme = state.colorPalette === CONSTANTS.COLOR_PALETTES.LIGHT ? CONSTANTS.COLOR_PALETTES.DARK : CONSTANTS.COLOR_PALETTES.LIGHT
+                    await ThemeUtils.setTheme(theme)
+                    state.colorPalette = theme
+                }
+            },
             text(() => state.colorPalette),
-            input({
-                type: 'button',
-                value: 'x',
-                onclick: () => {
+            i({
+                class: () => {
                     if (state.colorPalette === CONSTANTS.COLOR_PALETTES.LIGHT) {
-                        state.colorPalette = CONSTANTS.COLOR_PALETTES.DARK
+                        return 'fa-regular fa-sun'
                     } else {
-                        state.colorPalette = CONSTANTS.COLOR_PALETTES.LIGHT
+                        return 'fa-regular fa-moon'
                     }
                 }
-            })
+            }),
         )
     }
 }
 
 class TwitchInterfaceUpdater {
-    constructor(refreshInterval = 5000, points = {}) {
+    constructor(colorPalette = CONSTANTS.COLOR_PALETTES.DEFAULT, points = {}, refreshInterval = 5000) {
         this.refreshInterval = refreshInterval
         this.state = vanX.reactive({
             points: Object.assign(points, {[CONSTANTS.HEADER_CONSTANT]: 420}),
-            colorPalette: CONSTANTS.COLOR_PALETTES.LIGHT
+            colorPalette: colorPalette
         })
-        setTimeout(() => {
-            this.state.points['a'] = 520
-        }, 5000)
         this.interfaceElementsBuilder = new InterfaceElementsBuilder(this.state)
     }
 
     async getPoints() {
-        return await chrome.storage.sync.get()
+        const points = await chrome.storage.sync.get()
+        delete points[CONSTANTS.COLOR_PALETTES_THEME_STORE_KEY]
+        return points
     }
 
     createInterface() {
@@ -119,11 +143,13 @@ class TwitchInterfaceUpdater {
     }
 }
 
-const twitchInterfaceUpdater = new TwitchInterfaceUpdater()
-twitchInterfaceUpdater.checkForChanges().then(() => {
-    twitchInterfaceUpdater.createInterface()
-})
+ThemeUtils.getTheme().then((theme) => {
+    const twitchInterfaceUpdater = new TwitchInterfaceUpdater(theme)
+    twitchInterfaceUpdater.checkForChanges().then(() => {
+        twitchInterfaceUpdater.createInterface()
+    })
 
-setInterval(async () => {
-    await twitchInterfaceUpdater.checkForChanges()
-}, twitchInterfaceUpdater.refreshInterval)
+    setInterval(async () => {
+        await twitchInterfaceUpdater.checkForChanges()
+    }, twitchInterfaceUpdater.refreshInterval)
+})
