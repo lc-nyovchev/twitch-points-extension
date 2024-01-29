@@ -83,7 +83,7 @@ class InterfaceElementsBuilder {
                             deleter()
                         }
                     },
-                    i({class: 'fa-solid fa-trash'})
+                    i({class: 'fa-solid fa-trash fa-xs', title: 'Delete'})
                 )
             )
         )
@@ -97,15 +97,15 @@ class InterfaceElementsBuilder {
                     const theme = state.colorPalette === CONSTANTS.COLOR_PALETTES.LIGHT ? CONSTANTS.COLOR_PALETTES.DARK : CONSTANTS.COLOR_PALETTES.LIGHT
                     await ThemeUtils.setTheme(theme)
                     state.colorPalette = theme
-                }
+                },
+                title: 'Change theme'
             },
-            text(() => state.colorPalette),
             i({
                 class: () => {
                     if (state.colorPalette === CONSTANTS.COLOR_PALETTES.LIGHT) {
-                        return 'fa-regular fa-sun'
+                        return 'fa-regular fa-sun fa-lg'
                     } else {
-                        return 'fa-regular fa-moon'
+                        return 'fa-regular fa-moon fa-lg'
                     }
                 }
             }),
