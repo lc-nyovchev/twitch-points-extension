@@ -24,6 +24,7 @@
     align-items: center;
     justify-content: center;
     min-width: 280px;
+    height: 100%;
 }
 
 table {
