@@ -7,7 +7,7 @@ A `manifest v3` Chrome/Chromium extension for automatically claiming Twitch poin
 # Installation
 
 ## Chrome Webstore
-You can find it in the [Chrome Webstore](https://chromewebstore.google.com/detail/twitch-points/kaodlfjeiddkmfbijfghhpffhenppmcf)
+You can find the extension directly in the [Chrome Webstore](https://chromewebstore.google.com/detail/twitch-points/kaodlfjeiddkmfbijfghhpffhenppmcf) and install it from there.
 
 ## From source
 1. Simply clone the repository
