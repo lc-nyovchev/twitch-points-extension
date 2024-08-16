@@ -1,5 +1,8 @@
-# twitch-points-extension
-Chrome extension for automatically getting Twitch points
+# Twitch Points
+A `manifest v3` Chrome/Chromium extension for automatically claiming Twitch points
+
+![image](https://github.com/user-attachments/assets/8fc69dc6-2549-41dd-aa7b-4f7eff659312)
+
 
 # Installation
 
