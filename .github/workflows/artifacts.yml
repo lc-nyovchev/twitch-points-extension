@@ -1,0 +1,20 @@
+name: Create Build Artifact
+on:
+  push:
+    tags:
+      - '*'
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+      - name: Prepare Build Artifact
+        run: |
+          mkdir build
+          cp -r src/ manifest.json build/
+      - name: Upload Build Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ github.ref_name }}-build
+          path: build/
