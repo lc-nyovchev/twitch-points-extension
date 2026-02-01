@@ -1,27 +1,19 @@
-const {h1, h3, table, div, tr, td, th, input, text, i} = van.tags
+import { EngineUtils, UI_CONSTANTS, STORAGE_CONSTANTS } from './twitch-points-extension-utils'
 
-const CONSTANTS = {
-    COLOR_PALETTES: {
-        DARK: 'dark',
-        LIGHT: 'light',
-        DEFAULT: 'dark'
-    },
-    COLOR_PALETTES_THEME_STORE_KEY: 'TWITCH_POINTS_STORAGE_THEME',
-    HEADER_CONSTANT: 'TWITCH_POINTS_EXTENSION_HEADER'
-}
+const {h1, h3, table, div, tr, td, th, i} = van.tags
 
 const ThemeUtils = {
     async setTheme(theme) {
-        if (theme !== CONSTANTS.COLOR_PALETTES.DARK && theme !== CONSTANTS.COLOR_PALETTES.LIGHT) {
-            console.error(`Supported themes are only ${CONSTANTS.COLOR_PALETTES.DARK} and ${CONSTANTS.COLOR_PALETTES.LIGHT}`)
+        if (theme !== UI_CONSTANTS.COLOR_PALETTES.DARK && theme !== UI_CONSTANTS.COLOR_PALETTES.LIGHT) {
+            console.error(`Supported themes are only ${UI_CONSTANTS.COLOR_PALETTES.DARK} and ${UI_CONSTANTS.COLOR_PALETTES.LIGHT}`)
         }
-        return await chrome.storage.sync.set({[CONSTANTS.COLOR_PALETTES_THEME_STORE_KEY]: theme})
+        return await EngineUtils.storageSet({[STORAGE_CONSTANTS.THEME.KEY]: theme})
     },
     async getTheme() {
-        const store = await chrome.storage.sync.get()
-        const currentTheme = store[CONSTANTS.COLOR_PALETTES_THEME_STORE_KEY]
-        if ((currentTheme !== CONSTANTS.COLOR_PALETTES.DARK && currentTheme !== CONSTANTS.COLOR_PALETTES.LIGHT)) {
-            return CONSTANTS.COLOR_PALETTES.DEFAULT
+        const store = await EngineUtils.storageGet()
+        const currentTheme = store[STORAGE_CONSTANTS.THEME.KEY]
+        if ((currentTheme !== UI_CONSTANTS.CONSTANTS.COLOR_PALETTES.DARK && currentTheme !== UI_CONSTANTS.COLOR_PALETTES.LIGHT)) {
+            return UI_CONSTANTS.COLOR_PALETTES.DEFAULT
         } else {
             return currentTheme
         }
@@ -69,7 +61,7 @@ class InterfaceElementsBuilder {
     }
 
     createTableRow(score, deleter, channelName) {
-        if (channelName === CONSTANTS.HEADER_CONSTANT) {
+        if (channelName === UI_CONSTANTS.HEADER_CONSTANT) {
             return this.createTableHeader()
         }
         return tr(
@@ -79,7 +71,7 @@ class InterfaceElementsBuilder {
                 div({
                         class: 'clear-button',
                         onclick: async () => {
-                            await chrome.storage.sync.remove(channelName)
+                            await EngineUtils.storageRemove(channelName)
                             deleter()
                         }
                     },
@@ -94,7 +86,7 @@ class InterfaceElementsBuilder {
             {
                 class: 'clear-button color-switcher',
                 onclick: async () => {
-                    const theme = state.colorPalette === CONSTANTS.COLOR_PALETTES.LIGHT ? CONSTANTS.COLOR_PALETTES.DARK : CONSTANTS.COLOR_PALETTES.LIGHT
+                    const theme = state.colorPalette === UI_CONSTANTS.COLOR_PALETTES.LIGHT ? UI_CONSTANTS.COLOR_PALETTES.DARK : UI_CONSTANTS.COLOR_PALETTES.LIGHT
                     await ThemeUtils.setTheme(theme)
                     state.colorPalette = theme
                 },
@@ -102,7 +94,7 @@ class InterfaceElementsBuilder {
             },
             i({
                 class: () => {
-                    if (state.colorPalette === CONSTANTS.COLOR_PALETTES.LIGHT) {
+                    if (state.colorPalette === UI_CONSTANTS.COLOR_PALETTES.LIGHT) {
                         return 'fa-regular fa-sun fa-lg'
                     } else {
                         return 'fa-regular fa-moon fa-lg'
@@ -114,18 +106,18 @@ class InterfaceElementsBuilder {
 }
 
 class TwitchInterfaceUpdater {
-    constructor(colorPalette = CONSTANTS.COLOR_PALETTES.DEFAULT, points = {}, refreshInterval = 5000) {
+    constructor(colorPalette = STORAGE_CONSTANTS.THEME.DEFAULT_VALUE, points = {}, refreshInterval = 5000) {
         this.refreshInterval = refreshInterval
         this.state = vanX.reactive({
-            points: Object.assign(points, {[CONSTANTS.HEADER_CONSTANT]: 420}),
+            points: Object.assign(points, {[UI_CONSTANTS.HEADER_CONSTANT]: 420}),
             colorPalette: colorPalette
         })
         this.interfaceElementsBuilder = new InterfaceElementsBuilder(this.state)
     }
 
     async getPoints() {
-        const points = await chrome.storage.sync.get()
-        delete points[CONSTANTS.COLOR_PALETTES_THEME_STORE_KEY]
+        const points = await EngineUtils.storageGet()
+        delete points[STORAGE_CONSTANTS.THEME.KEY]
         return points
     }
 

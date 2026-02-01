@@ -8,7 +8,8 @@
         "128": "src/icons/128x-twitch-points-extension.png"
     },
     "background": {
-        "service_worker": "src/twitch-points-extension-background.js"
+        "service_worker": "src/twitch-points-extension-background.js",
+        "type": "module"
     },
     "content_scripts": [
         {
