@@ -1,13 +1,13 @@
 import { EngineUtils, UI_CONSTANTS, STORAGE_CONSTANTS } from './twitch-points-extension-utils.js'
 
-const {h1, h3, table, div, tr, td, th, i} = van.tags
+const { h1, h3, table, thead, tbody, div, tr, td, th, i } = van.tags
 
 const ThemeUtils = {
     async setTheme(theme) {
         if (theme !== UI_CONSTANTS.COLOR_PALETTES.DARK && theme !== UI_CONSTANTS.COLOR_PALETTES.LIGHT) {
             console.error(`Supported themes are only ${UI_CONSTANTS.COLOR_PALETTES.DARK} and ${UI_CONSTANTS.COLOR_PALETTES.LIGHT}`)
         }
-        return await EngineUtils.storageSet({[STORAGE_CONSTANTS.THEME.KEY]: theme})
+        return await EngineUtils.storageSet({ [STORAGE_CONSTANTS.THEME.KEY]: theme })
     },
     async getTheme() {
         const store = await EngineUtils.storageGet()
@@ -27,8 +27,11 @@ class InterfaceElementsBuilder {
     }
 
     createContainer() {
+        van.derive(() => {
+            document.body.className = this.state.colorPalette
+        })
         return div(
-            {class: () => `container ${this.state.colorPalette}`},
+            { class: 'container' },
             this.createHeader(),
             this.createControls(this.state),
             this.createDedication(),
@@ -46,31 +49,30 @@ class InterfaceElementsBuilder {
 
     createControls(state) {
         return div(
-            {class: 'controls-container'},
+            { class: 'controls-container' },
             this.createColorPaletteSwitcher(state)
         )
     }
 
     createTable(points) {
-        return vanX.list(
-            () => table({class: 'points-values'}),
-            points,
-            (score, deleter, channelName) => this.createTableRow(score, deleter, channelName)
+        return table(
+            { class: 'points-values' },
+            this.createTableHeader(),
+            vanX.list(tbody, points, (score, deleter, channelName) => this.createTableRow(score, deleter, channelName))
         )
     }
 
     createTableHeader() {
-        return tr(
-            th('ChannelName'),
-            th('Points'),
-            th('Delete')
+        return thead(
+            tr(
+                th('ChannelName'),
+                th('Points'),
+                th('Delete')
+            )
         )
     }
 
     createTableRow(score, deleter, channelName) {
-        if (channelName === UI_CONSTANTS.HEADER_CONSTANT) {
-            return this.createTableHeader()
-        }
         return tr(
             td(channelName),
             td(score),
@@ -82,7 +84,7 @@ class InterfaceElementsBuilder {
                             deleter()
                         }
                     },
-                    i({class: 'fa-solid fa-trash fa-xs', title: 'Delete'})
+                    i({ class: 'fa-solid fa-trash fa-xs', title: 'Delete' })
                 )
             )
         )
@@ -107,7 +109,7 @@ class InterfaceElementsBuilder {
                         return 'fa-regular fa-moon fa-lg'
                     }
                 }
-            }),
+            })
         )
     }
 }
@@ -116,7 +118,7 @@ class TwitchInterfaceUpdater {
     constructor(colorPalette = STORAGE_CONSTANTS.THEME.DEFAULT_VALUE, points = {}, refreshInterval = 5000) {
         this.refreshInterval = refreshInterval
         this.state = vanX.reactive({
-            points: Object.assign(points, {[UI_CONSTANTS.HEADER_CONSTANT]: 420}),
+            points: points,
             colorPalette: colorPalette
         })
         this.interfaceElementsBuilder = new InterfaceElementsBuilder(this.state)
@@ -134,8 +136,13 @@ class TwitchInterfaceUpdater {
 
     async checkForChanges() {
         const newPoints = await this.getPoints()
+        for (const point in this.state.points) {
+            if (!newPoints.hasOwnProperty(point)) {
+                delete this.state.points[point]
+            }
+        }
         for (const point in newPoints) {
-            if (!this.state.points.hasOwnProperty(point)) {
+            if (this.state.points[point] !== newPoints[point]) {
                 this.state.points[point] = newPoints[point]
             }
         }

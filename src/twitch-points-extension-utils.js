@@ -3,8 +3,7 @@ export const UI_CONSTANTS = {
         DARK: 'dark',
         LIGHT: 'light',
         DEFAULT: 'dark'
-    },
-    HEADER_CONSTANT: 'TWITCH_POINTS_EXTENSION_HEADER'
+    }
 }
 
 export const STORAGE_CONSTANTS = {

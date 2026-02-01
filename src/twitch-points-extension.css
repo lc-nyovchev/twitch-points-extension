@@ -50,7 +50,6 @@ body {
 table {
     width: 100%;
     border-collapse: collapse;
-    min-height: 24px;
 }
 
 th {
