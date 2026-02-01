@@ -17,8 +17,25 @@
     gap: 4px;
 }
 
+.controls-container {
+    display: flex;
+    gap: 10px;
+    width: 100%;
+}
+
 .color-switcher {
-    margin-bottom: 10px;
+    flex: 0 0 50%;
+    justify-content: right;
+}
+
+.toggle-enabled-button {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+}
+
+body {
+    margin: 0;
 }
 
 .container {
@@ -30,10 +47,6 @@
     min-width: 280px;
 }
 
-body {
-    margin: 0;
-}
-
 table {
     width: 100%;
     border-collapse: collapse;
@@ -43,10 +56,6 @@ table {
 th {
     font-weight: bold;
     text-align: inherit;
-}
-
-tr > td:last-of-type {
-    text-align: center;
 }
 
 tr>td:last-of-type {

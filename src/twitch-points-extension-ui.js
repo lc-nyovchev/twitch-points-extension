@@ -1,4 +1,4 @@
-import { EngineUtils, UI_CONSTANTS, STORAGE_CONSTANTS } from './twitch-points-extension-utils'
+import { EngineUtils, UI_CONSTANTS, STORAGE_CONSTANTS } from './twitch-points-extension-utils.js'
 
 const {h1, h3, table, div, tr, td, th, i} = van.tags
 
@@ -12,7 +12,7 @@ const ThemeUtils = {
     async getTheme() {
         const store = await EngineUtils.storageGet()
         const currentTheme = store[STORAGE_CONSTANTS.THEME.KEY]
-        if ((currentTheme !== UI_CONSTANTS.CONSTANTS.COLOR_PALETTES.DARK && currentTheme !== UI_CONSTANTS.COLOR_PALETTES.LIGHT)) {
+        if ((currentTheme !== UI_CONSTANTS.COLOR_PALETTES.DARK && currentTheme !== UI_CONSTANTS.COLOR_PALETTES.LIGHT)) {
             return UI_CONSTANTS.COLOR_PALETTES.DEFAULT
         } else {
             return currentTheme
@@ -30,8 +30,8 @@ class InterfaceElementsBuilder {
         return div(
             {class: () => `container ${this.state.colorPalette}`},
             this.createHeader(),
+            this.createControls(this.state),
             this.createDedication(),
-            this.createColorPaletteSwitcher(this.state),
             this.createTable(this.state.points)
         )
     }
@@ -42,6 +42,13 @@ class InterfaceElementsBuilder {
 
     createDedication() {
         return h3('With ❤️ to Hania')
+    }
+
+    createControls(state) {
+        return div(
+            {class: 'controls-container'},
+            this.createColorPaletteSwitcher(state)
+        )
     }
 
     createTable(points) {
