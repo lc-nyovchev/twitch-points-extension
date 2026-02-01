@@ -1,106 +1,131 @@
 {
   // This file consistently uses `let` keyword instead of `const` for reducing the bundle size.
   // Global variables - aliasing some builtin symbols to reduce the bundle size.
-  let {fromEntries, entries, keys, getPrototypeOf} = Object
+  let {fromEntries, entries, keys, hasOwn, getPrototypeOf, create, assign} = Object
   let {get: refGet, set: refSet, deleteProperty: refDelete, ownKeys: refOwnKeys} = Reflect
-  let Sym = Symbol, {state, derive, add, tags} = van, stateProto = getPrototypeOf(state())
-  let itemsToGc, gcCycleInMs = 1000, _undefined
-  let statesSym = Sym(), objSym = Sym(), isCalcFunc = Sym(), bindingsSym = Sym(), keysGenSym = Sym()
-  let keySym = Sym()
+  let {state, derive, add} = van
+  let statesToGc, gcCycleInMs = 1000, _undefined, replacing
+  let statesSym = Symbol(), isCalcFunc = Symbol(), bindingsSym = Symbol(), keysGenSym = Symbol(), keyToChildSym = Symbol(), noreactiveSym = Symbol()
   let calc = f => (f[isCalcFunc] = 1, f)
-  let toState = v => v?.[isCalcFunc] ? derive(() => reactive(v())) : state(reactive(v))
-  let reactive = srcObj => {
-    if (!(srcObj instanceof Object) || srcObj[statesSym]) return srcObj
-    let proxy = new Proxy(
-      (srcObj[statesSym] = fromEntries(entries(srcObj).map(([k, v]) => [k, toState(v)])),
-      srcObj[objSym] = srcObj,
-      srcObj[bindingsSym] = [],
-      srcObj[keysGenSym] = state(1),
-      srcObj),
-      {
-        get: (obj, name) =>
-          getPrototypeOf(obj[statesSym][name] ?? 0) === stateProto ? obj[statesSym][name].val : (
-            name === "length" && obj[keysGenSym].val,
-            refGet(obj, name, proxy)
-          ),
-        set(obj, name, v) {
-          let states = obj[statesSym]
-          if (name in states) return states[name].val = reactive(v), 1
-          let existingKey = name in obj
-          if (!refSet(obj, name, v)) return
-          existingKey ||
-            refSet(states, name, toState(v)) &&
-            (++obj[keysGenSym].val, onAdd(proxy, name, states[name]))
-          return 1
-        },
-        deleteProperty: (obj, name) => (
-          refDelete(obj[statesSym], name) && onDelete(obj, name),
-          refDelete(obj, name) && ++obj[keysGenSym].val
-        ),
-        ownKeys: obj => (obj[keysGenSym].val, refOwnKeys(obj)),
-      },
-    )
-    return proxy
+  let isObject = x => x instanceof Object && !(x instanceof Function) && !x[noreactiveSym]
+  let toState = v => {
+    if (v?.[isCalcFunc]) {
+      let s = state()
+      derive(() => {
+        let newV = v()
+        isObject(s.rawVal) && isObject(newV) ? replace(s.rawVal, newV) : s.val = reactive(newV)
+      })
+      return s
+    } else return state(reactive(v))
   }
+  let buildStates = srcObj => {
+    let states = Array.isArray(srcObj) ? [] : {__proto__: getPrototypeOf(srcObj)}
+    for (let [k, v] of entries(srcObj)) states[k] = toState(v)
+    states[bindingsSym] = []
+    states[keysGenSym] = state(1)
+    return states
+  }
+  let reactiveHandler = {
+    get: (states, name, proxy) =>
+        name === statesSym ? states :
+            hasOwn(states, name) ?
+                Array.isArray(states) && name === "length" ?
+                    (states[keysGenSym].val, states.length) :
+                    states[name].val :
+                refGet(states, name, proxy),
+    set: (states, name, v, proxy) =>
+        hasOwn(states, name) ?
+            Array.isArray(states) && name === "length" ?
+                (v !== states.length && ++states[keysGenSym].val, states.length = v, 1) :
+                (states[name].val = reactive(v), 1) :
+            name in states ? refSet(states, name, v, proxy) :
+                refSet(states, name, toState(v)) && (
+                    ++states[keysGenSym].val,
+                        filterBindings(states).forEach(
+                            addToContainer.bind(_undefined, proxy, name, states[name], replacing)),
+                        1
+                ),
+    deleteProperty: (states, name) =>
+        (refDelete(states, name) && onDelete(states, name), ++states[keysGenSym].val),
+    ownKeys: states => (states[keysGenSym].val, refOwnKeys(states)),
+  }
+  let reactive = srcObj => !isObject(srcObj) || srcObj[statesSym] ? srcObj :
+      new Proxy(buildStates(srcObj), reactiveHandler)
+  let noreactive = x => (x[noreactiveSym] = 1, x)
   let stateFields = obj => obj[statesSym]
-  let filterBindings = items =>
-    items[bindingsSym] = items[bindingsSym].filter(b => b._containerDom.isConnected)
-  let toBindFunc = (items, k, v, f) => () => {
-    let dom = f(v, () => delete items[k], k)
-    dom[keySym] = k
-    return dom
+  let stateProto = getPrototypeOf(state())
+  let rawStates = states => new Proxy(states, {
+    get: (states, name, proxy) => getPrototypeOf(states[name] ?? 0) === stateProto ?
+        {val: raw(states[name].rawVal)} : refGet(states, name, proxy),
+  })
+  let raw = obj => obj?.[statesSym] ? new Proxy(rawStates(obj[statesSym]), reactiveHandler) : obj
+  let filterBindings = states =>
+      states[bindingsSym] = states[bindingsSym].filter(b => b._containerDom.isConnected)
+  let addToContainer = (items, k, v, skipReorder, {_containerDom, f}) => {
+    let isArray = Array.isArray(items), typedK = isArray ? Number(k) : k
+    add(_containerDom, () =>
+        _containerDom[keyToChildSym][k] = f(v, () => delete items[k], typedK))
+    isArray && !skipReorder && typedK !== items.length - 1 &&
+    _containerDom.insertBefore(_containerDom.lastChild,
+        _containerDom[keyToChildSym][keys(items).find(key => Number(key) > typedK)])
   }
-  let addToContainer = (items, k, v, {_containerDom, f}, skipReorder) => {
-    add(_containerDom, toBindFunc(items, k, v, f))
-    if (!skipReorder && Array.isArray(items) && k != items.length - 1) {
-      let doms = {}
-      for (let dom of _containerDom.childNodes) doms[dom[keySym]] = dom
-      let dom = _containerDom.firstChild
-      for (let key of keys(items))
-        dom === doms[key] ? dom = dom.nextSibling : _containerDom.insertBefore(doms[key], dom)
+  let onDelete = (states, k) => {
+    for (let b of filterBindings(states)) {
+      let keyToChild = b._containerDom[keyToChildSym]
+      keyToChild[k]?.remove()
+      delete keyToChild[k]
     }
   }
-  let onAdd = (items, k, v) => filterBindings(items).forEach(
-    addToContainer.bind(_undefined, items, k, v))
-  let onDelete = (items, k) => {
-    for (let b of filterBindings(items))
-      [...b._containerDom.childNodes].find(dom => dom[keySym] === k)?.remove()
-  }
-  let addItemsToGc = items => (itemsToGc ?? (itemsToGc = (
-    setTimeout(
-      () => (itemsToGc.forEach(filterBindings), itemsToGc = _undefined), gcCycleInMs),
-    new Set))).add(items)
-  let list = (containerFunc, items, itemFunc) => {
-    let binding = {_containerDom: containerFunc(), f: itemFunc}
-    items[bindingsSym].push(binding)
-    addItemsToGc(items)
-    for (let [k, v] of entries(items[statesSym])) addToContainer(items, k, v, binding, 1)
+  let addStatesToGc = states => (statesToGc ?? (statesToGc = (
+      setTimeout(
+          () => (statesToGc.forEach(filterBindings), statesToGc = _undefined), gcCycleInMs),
+          new Set))).add(states)
+  let list = (container, items, itemFunc) => {
+    let binding = {_containerDom: container instanceof Function ? container() : container, f: itemFunc}
+    let states = items[statesSym]
+    binding._containerDom[keyToChildSym] = {}
+    states[bindingsSym].push(binding)
+    addStatesToGc(states)
+    for (let [k, v] of entries(states)) addToContainer(items, k, v, 1, binding)
     return binding._containerDom
   }
-  let replace = (items, f) => {
-    let newKvs = Array.isArray(items) ?
-      entries(f(items.filter(_ => 1))) : f(entries(items))
-    let obj = items[objSym], newObj = fromEntries(newKvs)
-    let states = items[statesSym]
-    let newStates = fromEntries(newKvs.map(([k, v]) => {
-      let s = states[k]
-      s ? s.val = reactive(v) : s = toState(v)
-      return [k, s]
-    }))
-    for (let {_containerDom, f} of filterBindings(items)) {
-      let doms = {}
-      for (let dom of [..._containerDom.childNodes])
-        dom[keySym] in newStates ? doms[dom[keySym]] = dom : dom.remove()
-      let dom = _containerDom.firstChild
-      for (let [k, s] of entries(newStates))
-        dom === doms[k] ? dom = dom.nextSibling :
-          _containerDom.insertBefore(doms[k] ??
-            tags.div(toBindFunc(items, k, s, f)).firstChild, dom)
+  let replaceInternal = (obj, replacement) => {
+    for (let [k, v] of entries(replacement)) {
+      let existingV = obj[k]
+      isObject(existingV) && isObject(v) ? replaceInternal(existingV, v) : obj[k] = v
     }
-    for (let k in obj) delete obj[k]
-    for (let k in newObj) obj[k] = newObj[k]
-    items[statesSym] = newStates
-    ++items[keysGenSym].val
+    for (let k in obj) hasOwn(replacement, k) || delete obj[k]
+    let newKeys = keys(replacement), isArray = Array.isArray(obj)
+    if (isArray || keys(obj).some((k, i) => k !== newKeys[i])) {
+      let states = obj[statesSym]
+      if (isArray) obj.length = replacement.length; else {
+        ++states[keysGenSym].val
+        let statesCopy = {...states}
+        for (let k of newKeys) delete states[k]
+        for (let k of newKeys) states[k] = statesCopy[k]
+      }
+      for (let {_containerDom} of filterBindings(states)) {
+        let {firstChild: dom, [keyToChildSym]: keyToChild} = _containerDom
+        for (let k of newKeys) dom === keyToChild[k] ?
+            dom = dom.nextSibling : _containerDom.insertBefore(keyToChild[k], dom)
+      }
+    }
+    return obj
   }
-  window.vanX = {calc, reactive, stateFields, list, replace}
+  let replace = (obj, replacement) => {
+    replacing = 1
+    try {
+      return replaceInternal(obj, replacement instanceof Function ?
+          Array.isArray(obj) ? replacement(obj.filter(_ => 1)) : fromEntries(replacement(entries(obj))) :
+          replacement
+      )
+    } finally {
+      replacing = _undefined
+    }
+  }
+  let compact = obj => Array.isArray(obj) ? obj.filter(_ => 1).map(compact) :
+      isObject(obj) ?
+          assign(create(getPrototypeOf(obj)), fromEntries(entries(obj).map(([k, v]) => [k, compact(v)])))
+          : obj
+  window.vanX = {calc, reactive, noreactive, stateFields, raw, list, replace, compact}
 }
