@@ -1,6 +1,6 @@
 import { EngineUtils, UI_CONSTANTS, STORAGE_CONSTANTS } from './twitch-points-extension-utils.js'
 
-const { h1, h3, table, thead, tbody, div, tr, td, th, i } = van.tags
+const { h2, h3, table, thead, tbody, div, tr, td, th, i } = van.tags
 
 const ThemeUtils = {
     async setTheme(theme) {
@@ -40,7 +40,7 @@ class InterfaceElementsBuilder {
     }
 
     createHeader() {
-        return h1('Twitch Points Extension')
+        return h2('Twitch Points Extension')
     }
 
     createDedication() {
@@ -56,7 +56,6 @@ class InterfaceElementsBuilder {
 
     createTable(points) {
         return table(
-            { class: 'points-values' },
             this.createTableHeader(),
             vanX.list(tbody, points, (score, deleter, channelName) => this.createTableRow(score, deleter, channelName))
         )
