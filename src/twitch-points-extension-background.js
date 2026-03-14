@@ -1,7 +1,6 @@
 import { MESSAGE_CONSTANTS, EngineUtils } from './twitch-points-extension-utils.js'
 
 class TwitchPointsStorage {
-
     async getPoints(channelName) {
         const scoreObj = await EngineUtils.storageGet()
         const score = parseInt(scoreObj[channelName], 10)
@@ -10,7 +9,6 @@ class TwitchPointsStorage {
         }
         return 0
     }
-
     async setPoints(channelName, points) {
         console.debug(`Points for ${channelName} set to ${points}`)
         return EngineUtils.storageSet({ [channelName]: points })

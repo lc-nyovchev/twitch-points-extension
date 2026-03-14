@@ -21,11 +21,9 @@ const ThemeUtils = {
 }
 
 class InterfaceElementsBuilder {
-
     constructor(state) {
         this.state = state
     }
-
     createContainer() {
         van.derive(() => {
             document.body.className = this.state.colorPalette
@@ -38,29 +36,24 @@ class InterfaceElementsBuilder {
             this.createTable(this.state.points)
         )
     }
-
     createHeader() {
         return h2('Twitch Points Extension')
     }
-
     createDedication() {
         return h3('With ❤️ to Hania')
     }
-
     createControls(state) {
         return div(
             { class: 'controls-container' },
             this.createColorPaletteSwitcher(state)
         )
     }
-
     createTable(points) {
         return table(
             this.createTableHeader(),
             vanX.list(tbody, points, (score, deleter, channelName) => this.createTableRow(score, deleter, channelName))
         )
     }
-
     createTableHeader() {
         return thead(
             tr(
@@ -70,7 +63,6 @@ class InterfaceElementsBuilder {
             )
         )
     }
-
     createTableRow(score, deleter, channelName) {
         return tr(
             td(channelName),
@@ -88,7 +80,6 @@ class InterfaceElementsBuilder {
             )
         )
     }
-
     createColorPaletteSwitcher(state) {
         return div(
             {
@@ -122,17 +113,14 @@ class TwitchInterfaceUpdater {
         })
         this.interfaceElementsBuilder = new InterfaceElementsBuilder(this.state)
     }
-
     async getPoints() {
         const points = await EngineUtils.storageGet()
         delete points[STORAGE_CONSTANTS.THEME.KEY]
         return points
     }
-
     createInterface() {
         van.add(document.body, this.interfaceElementsBuilder.createContainer())
     }
-
     async checkForChanges() {
         const newPoints = await this.getPoints()
         for (const point in this.state.points) {
