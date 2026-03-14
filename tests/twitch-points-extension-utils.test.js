@@ -1,5 +1,28 @@
 import { beforeEach, describe, it, expect, vi } from 'vitest'
-import { EngineUtils } from '../src/twitch-points-extension-utils.js'
+import { EngineUtils, MESSAGE_CONSTANTS, STORAGE_CONSTANTS, UI_CONSTANTS } from '../src/twitch-points-extension-utils.js'
+
+describe('UI_CONSTANTS', () => {
+    it('should have the correct color palettes values', () => {
+        expect(UI_CONSTANTS.COLOR_PALETTES.DARK).toBe('dark')
+        expect(UI_CONSTANTS.COLOR_PALETTES.LIGHT).toBe('light')
+        expect(UI_CONSTANTS.COLOR_PALETTES.DEFAULT).toBe('dark')
+    })
+})
+
+describe('STORAGE_CONSTANTS', () => {
+    it('should have the correct theme key', () => {
+        expect(STORAGE_CONSTANTS.THEME.KEY).toBe('TWITCH_POINTS_STORAGE_THEME')
+    })
+    it('should have the correct default theme value', () => {
+        expect(STORAGE_CONSTANTS.THEME.DEFAULT_VALUE).toBe('dark')
+    })
+})
+
+describe('MESSAGE_CONSTANTS', () => {
+    it('should have the correct message type key', () => {
+        expect(MESSAGE_CONSTANTS.TWITCH_POINTS_MESSAGE).toBe('twitchPoints')
+    })
+})
 
 describe('EngineUtils', () => {
     beforeEach((context) => {
