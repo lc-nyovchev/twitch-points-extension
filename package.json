@@ -1,0 +1,16 @@
+{
+  "name": "twitch-points-extension",
+  "version": "1.2",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "vitest"
+  },
+  "author": "lc-nyovchev",
+  "license": "MIT",
+  "devDependencies": {
+    "vite": "^8.0.0",
+    "vitest": "^4.1.0"
+  }
+}

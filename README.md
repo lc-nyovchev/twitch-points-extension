@@ -14,3 +14,10 @@ You can find the extension directly in the [Chrome Webstore](https://chromewebst
 2. Go to `Chrome` -> `Extensions`
 3. Select `Load Unpacked` and point to where you checked out the repository
 
+## Testing
+### Prerequisite: `nvm`
+Install [nvm](https://github.com/nvm-sh/nvm)
+### Install proper npm version
+`nvm install`
+### Run the tests
+`npm run test`
