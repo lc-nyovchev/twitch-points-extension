@@ -2,15 +2,18 @@ import { EngineUtils, UI_CONSTANTS, STORAGE_CONSTANTS } from './twitch-points-ex
 
 const { h2, h3, table, thead, tbody, div, tr, td, th, i } = van.tags
 
-const ThemeUtils = {
+class ThemeUtils {
+    constructor(engineUtils = new EngineUtils(chrome)) {
+        this.engineUtils = engineUtils
+    }
     async setTheme(theme) {
         if (theme !== UI_CONSTANTS.COLOR_PALETTES.DARK && theme !== UI_CONSTANTS.COLOR_PALETTES.LIGHT) {
             console.error(`Supported themes are only ${UI_CONSTANTS.COLOR_PALETTES.DARK} and ${UI_CONSTANTS.COLOR_PALETTES.LIGHT}`)
         }
-        return await EngineUtils.storageSet({ [STORAGE_CONSTANTS.THEME.KEY]: theme })
-    },
+        return await this.engineUtils.storageSet({ [STORAGE_CONSTANTS.THEME.KEY]: theme })
+    }
     async getTheme() {
-        const store = await EngineUtils.storageGet()
+        const store = await this.engineUtils.storageGet()
         const currentTheme = store[STORAGE_CONSTANTS.THEME.KEY]
         if ((currentTheme !== UI_CONSTANTS.COLOR_PALETTES.DARK && currentTheme !== UI_CONSTANTS.COLOR_PALETTES.LIGHT)) {
             return UI_CONSTANTS.COLOR_PALETTES.DEFAULT
@@ -21,8 +24,13 @@ const ThemeUtils = {
 }
 
 class InterfaceElementsBuilder {
-    constructor(state) {
+    constructor(
+        state = {},
+        engineUtils = new EngineUtils()
+    ) {
         this.state = state
+        this.engineUtils = engineUtils
+        this.themeUtils = new ThemeUtils(engineUtils)
     }
     createContainer() {
         van.derive(() => {
@@ -71,7 +79,7 @@ class InterfaceElementsBuilder {
                 div({
                         class: 'clear-button',
                         onclick: async () => {
-                            await EngineUtils.storageRemove(channelName)
+                            await this.engineUtils.storageRemove(channelName)
                             deleter()
                         }
                     },
@@ -86,7 +94,7 @@ class InterfaceElementsBuilder {
                 class: 'clear-button color-switcher',
                 onclick: async () => {
                     const theme = state.colorPalette === UI_CONSTANTS.COLOR_PALETTES.LIGHT ? UI_CONSTANTS.COLOR_PALETTES.DARK : UI_CONSTANTS.COLOR_PALETTES.LIGHT
-                    await ThemeUtils.setTheme(theme)
+                    await this.themeUtils.setTheme(theme)
                     state.colorPalette = theme
                 },
                 title: 'Change theme'
@@ -105,13 +113,19 @@ class InterfaceElementsBuilder {
 }
 
 class TwitchInterfaceUpdater {
-    constructor(colorPalette = STORAGE_CONSTANTS.THEME.DEFAULT_VALUE, points = {}, refreshInterval = 5000) {
+    constructor(
+        colorPalette = STORAGE_CONSTANTS.THEME.DEFAULT_VALUE,
+        points = {},
+        refreshInterval = 5000,
+        engineUtils = new EngineUtils()
+    ) {
         this.refreshInterval = refreshInterval
+        this.engineUtils = engineUtils
         this.state = vanX.reactive({
             points: points,
             colorPalette: colorPalette
         })
-        this.interfaceElementsBuilder = new InterfaceElementsBuilder(this.state)
+        this.interfaceElementsBuilder = new InterfaceElementsBuilder(this.state, this.engineUtils)
     }
     async getPoints() {
         const points = await EngineUtils.storageGet()
