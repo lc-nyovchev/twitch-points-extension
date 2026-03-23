@@ -1,5 +1,10 @@
-import { beforeEach, describe, it, expect, vi } from 'vitest'
-import { EngineUtils, MESSAGE_CONSTANTS, STORAGE_CONSTANTS, UI_CONSTANTS } from '../src/twitch-points-extension-utils.js'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import {
+    EngineUtils,
+    MESSAGE_CONSTANTS,
+    STORAGE_CONSTANTS,
+    UI_CONSTANTS
+} from '../src/utils/twitch-points-extension-utils.js'
 
 describe('UI_CONSTANTS', () => {
     it('should have the correct color palettes values', () => {
@@ -39,34 +44,41 @@ describe('EngineUtils', () => {
             action: namedMock('action')
         }
         context.chrome = chrome
-        vi.stubGlobal('chrome', chrome)
+        context.engineUtils = new EngineUtils(chrome)
     })
-    it('storageSet should call the proper internals', async ({ chrome }) => {
+    it('storageSet should call the proper internals', async ({ chrome, engineUtils }) => {
         const value = { key: 'value' }
-        await EngineUtils.storageSet(value)
+
+        await engineUtils.storageSet(value)
+
         expect(chrome.storage.sync.set).toHaveBeenCalledWith(value)
     })
     describe('storageGet', () => {
-        it('should call the proper internals', async ({ chrome }) => {
-            await EngineUtils.storageGet()
+        it('should call the proper internals', async ({ chrome, engineUtils }) => {
+            await engineUtils.storageGet()
+
             expect(chrome.storage.sync.get).toHaveBeenCalled()
         })
-        it('should return the correct value', async ({ chrome }) => {
+        it('should return the correct value', async ({ chrome, engineUtils }) => {
             const expectedResult = { youtube: '420', google: '1337', gmail: '1911' }
             chrome.storage.sync.get.mockResolvedValueOnce(expectedResult)
-            const storage = await EngineUtils.storageGet()
+
+            const storage = await engineUtils.storageGet()
+
             expect(storage).toEqual(expectedResult)
         })
     })
-    it('storageRemove call the proper internals', async ({ chrome }) => {
+    it('storageRemove call the proper internals', async ({ chrome, engineUtils }) => {
         const website = 'google'
-        await EngineUtils.storageRemove(website)
+
+        await engineUtils.storageRemove(website)
+
         expect(chrome.storage.sync.remove).toHaveBeenCalledWith(website)
     })
-    it('runtime call the proper internals', ({ chrome }) => {
-        expect(EngineUtils.runtime()).toBe(chrome.runtime)
+    it('runtime call the proper internals', ({ chrome, engineUtils }) => {
+        expect(engineUtils.runtime()).toBe(chrome.runtime)
     })
-    it('action call the proper internals', ({ chrome }) => {
-        expect(EngineUtils.action()).toBe(chrome.action)
+    it('action call the proper internals', ({ chrome, engineUtils }) => {
+        expect(engineUtils.action()).toBe(chrome.action)
     })
 })
