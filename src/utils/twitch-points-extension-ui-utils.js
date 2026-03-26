@@ -52,10 +52,10 @@ export class InterfaceElementsBuilder {
         )
     }
     createHeader() {
-        return h2('Twitch Points Extension')
+        return h2(UI_CONSTANTS.DEFAULT_TITLE)
     }
     createDedication() {
-        return h3('With ❤️ to Hania')
+        return h3(UI_CONSTANTS.CONTROLS.DEDICATION.DEFAULT_DEDICATION)
     }
     createControls(state) {
         return div(
@@ -72,9 +72,9 @@ export class InterfaceElementsBuilder {
     createTableHeader() {
         return thead(
             tr(
-                th('ChannelName'),
-                th('Points'),
-                th('Delete')
+                th(UI_CONSTANTS.TABLE_HEADERS.CHANNEL_NAME),
+                th(UI_CONSTANTS.TABLE_HEADERS.POINTS),
+                th(UI_CONSTANTS.TABLE_HEADERS.DELETE)
             )
         )
     }
@@ -104,7 +104,7 @@ export class InterfaceElementsBuilder {
                     await this.themeUtils.setTheme(theme)
                     state.colorPalette = theme
                 },
-                title: 'Change theme'
+                title: UI_CONSTANTS.CHANGE_THEME_TITLE
             },
             i({
                 class: () => {
@@ -157,7 +157,7 @@ export const init = () => {
         Promise.all([
             themeUtils.getTheme(),
             themeUtils.getPoints()
-        ]).then((theme, points) => {
+        ]).then(([theme, points]) => {
             const twitchInterfaceUpdater = new TwitchInterfaceUpdater(
                 theme, points, 5000, themeUtils
             )

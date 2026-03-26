@@ -3,6 +3,18 @@ export const UI_CONSTANTS = {
         DARK: 'dark',
         LIGHT: 'light',
         DEFAULT: 'dark'
+    },
+    DEFAULT_TITLE: 'Twitch Points Extension',
+    TABLE_HEADERS: {
+        CHANNEL_NAME: 'ChannelName',
+        POINTS: 'Points',
+        DELETE: 'Delete'
+    },
+    CHANGE_THEME_TITLE: 'Change theme',
+    CONTROLS: {
+        DEDICATION: {
+            DEFAULT_DEDICATION: 'With ❤️ to Hania'
+        }
     }
 }
 

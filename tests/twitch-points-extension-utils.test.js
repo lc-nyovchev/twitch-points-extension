@@ -12,6 +12,20 @@ describe('UI_CONSTANTS', () => {
         expect(UI_CONSTANTS.COLOR_PALETTES.LIGHT).toBe('light')
         expect(UI_CONSTANTS.COLOR_PALETTES.DEFAULT).toBe('dark')
     })
+    it('should have the correct default title', () => {
+        expect(UI_CONSTANTS.DEFAULT_TITLE).toBe('Twitch Points Extension')
+    })
+    it('should have the correct table headers', () => {
+        expect(UI_CONSTANTS.TABLE_HEADERS.CHANNEL_NAME).toBe('ChannelName')
+        expect(UI_CONSTANTS.TABLE_HEADERS.POINTS).toBe('Points')
+        expect(UI_CONSTANTS.TABLE_HEADERS.DELETE).toBe('Delete')
+    })
+    it('should have the correct change theme title', () => {
+        expect(UI_CONSTANTS.CHANGE_THEME_TITLE).toBe('Change theme')
+    })
+    it('should have the correct default dedication', () => {
+        expect(UI_CONSTANTS.CONTROLS.DEDICATION.DEFAULT_DEDICATION).toBe('With ❤️ to Hania')
+    })
 })
 
 describe('STORAGE_CONSTANTS', () => {
