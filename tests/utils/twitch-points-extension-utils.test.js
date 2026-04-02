@@ -4,7 +4,7 @@ import {
     MESSAGE_CONSTANTS,
     STORAGE_CONSTANTS,
     UI_CONSTANTS
-} from '../src/utils/twitch-points-extension-utils.js'
+} from '../../src/utils/twitch-points-extension-utils.js'
 
 describe('UI_CONSTANTS', () => {
     it('should have the correct color palettes values', () => {

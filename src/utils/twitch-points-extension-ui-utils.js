@@ -8,7 +8,9 @@ export class ThemeUtils {
     }
     async setTheme(theme) {
         if (theme !== UI_CONSTANTS.COLOR_PALETTES.DARK && theme !== UI_CONSTANTS.COLOR_PALETTES.LIGHT) {
-            console.error(`Supported themes are only ${UI_CONSTANTS.COLOR_PALETTES.DARK} and ${UI_CONSTANTS.COLOR_PALETTES.LIGHT}`)
+            const msg = `Supported themes are only ${UI_CONSTANTS.COLOR_PALETTES.DARK} and ${UI_CONSTANTS.COLOR_PALETTES.LIGHT}`
+            console.error(msg)
+            throw new Error(msg)
         }
         return await this.engineUtils.storageSet({ [STORAGE_CONSTANTS.THEME.KEY]: theme })
     }
