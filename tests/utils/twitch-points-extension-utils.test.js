@@ -1,10 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import {
-    EngineUtils,
-    MESSAGE_CONSTANTS,
-    STORAGE_CONSTANTS,
-    UI_CONSTANTS
-} from '../../src/utils/twitch-points-extension-utils.js'
+import { EngineUtils, MESSAGE_CONSTANTS, STORAGE_CONSTANTS, StorageUtils, UI_CONSTANTS } from '../../src/utils/twitch-points-extension-utils.js'
+import testUtils from '../test-utils'
 
 describe('UI_CONSTANTS', () => {
     it('should have the correct color palettes values', () => {
@@ -94,5 +90,91 @@ describe('EngineUtils', () => {
     })
     it('action call the proper internals', ({ chrome, engineUtils }) => {
         expect(engineUtils.action()).toBe(chrome.action)
+    })
+})
+
+describe('StorageUtils', () => {
+    beforeEach((context) => {
+        const engineUtils = testUtils.mockEngineUtils()
+        context.storageUtils = new StorageUtils(engineUtils)
+        context.engineUtils = engineUtils
+    })
+    describe('setTheme', () => {
+        it('should call the proper internals for light', async ({ storageUtils, engineUtils }) => {
+            await storageUtils.setTheme('light')
+
+            expect(engineUtils.storageSet).toHaveBeenCalledWith({ [STORAGE_CONSTANTS.THEME.KEY]: 'light' })
+        })
+        it('should throw error on unsupported theme', async ({ storageUtils, engineUtils }) => {
+            await expect(storageUtils.setTheme('unsupported theme'))
+                .rejects
+                .toThrow('Supported themes are only dark and light')
+            expect(engineUtils.storageSet).not.toHaveBeenCalled()
+        })
+    })
+    describe('getTheme', () => {
+        it('should return the dark theme by default', async ({ storageUtils, engineUtils }) => {
+            engineUtils.storageGet.mockResolvedValueOnce({})
+
+            const theme = await storageUtils.getTheme()
+
+            expect(theme).toBe('dark')
+            expect(engineUtils.storageGet).toHaveBeenCalled()
+        })
+        it('should return the correct theme if set', async ({ storageUtils, engineUtils }) => {
+            engineUtils.storageGet.mockResolvedValueOnce({ [STORAGE_CONSTANTS.THEME.KEY]: 'light' })
+
+            const theme = await storageUtils.getTheme()
+
+            expect(theme).toBe('light')
+            expect(engineUtils.storageGet).toHaveBeenCalled()
+        })
+    })
+    describe('getPoints', () => {
+        it('should return an empty object if things are not set', async ({ storageUtils, engineUtils }) => {
+            engineUtils.storageGet.mockResolvedValueOnce({})
+
+            const points = await storageUtils.getPoints()
+
+            expect(points).toEqual({})
+            expect(engineUtils.storageGet).toHaveBeenCalled()
+        })
+        it('should return the correct points converted to int', async ({ storageUtils, engineUtils }) => {
+            engineUtils.storageGet.mockResolvedValueOnce({ 'grubby': '420' })
+
+            const points = await storageUtils.getPoints()
+
+            expect(points).toEqual({ grubby: 420 })
+        })
+        it('should ignore the theme if set',async ({ storageUtils, engineUtils }) => {
+            engineUtils.storageGet.mockResolvedValueOnce({
+                back2Warcraft: '1911',
+                [STORAGE_CONSTANTS.THEME.KEY]: 'light',
+                grubby: '420'
+            })
+
+            const points = await storageUtils.getPoints()
+
+            expect(points).toEqual({ grubby: 420, back2Warcraft: 1911 })
+            expect(engineUtils.storageGet).toHaveBeenCalled()
+        })
+    })
+    describe('getPointsForChannel', () => {
+        it('should return the correct points', async ({ storageUtils, engineUtils }) => {
+            engineUtils.storageGet.mockResolvedValueOnce({ 'grubby': '420' })
+
+            const points = await storageUtils.getPointsForChannel('grubby')
+
+            expect(points).toBe(420)
+            expect(engineUtils.storageGet).toHaveBeenCalled()
+        })
+        it('should return 0 if channel doesnt exist',  async ({ storageUtils, engineUtils }) => {
+            engineUtils.storageGet.mockResolvedValueOnce({ 'grubby': '420' })
+
+            const points = await storageUtils.getPointsForChannel('grubby-with-a-moustache')
+
+            expect(points).toBe(0)
+            expect(engineUtils.storageGet).toHaveBeenCalled()
+        })
     })
 })

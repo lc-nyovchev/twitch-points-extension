@@ -1,3 +1,3 @@
-import {init} from './utils/twitch-points-extension-ui-utils.js'
+import { init } from './utils/twitch-points-extension-ui-utils.js'
 
 init()

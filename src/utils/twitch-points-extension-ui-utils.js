@@ -1,45 +1,14 @@
-import { EngineUtils, UI_CONSTANTS, STORAGE_CONSTANTS } from './twitch-points-extension-utils.js'
+import { STORAGE_CONSTANTS, StorageUtils, UI_CONSTANTS } from './twitch-points-extension-utils.js'
 
 const { h2, h3, table, thead, tbody, div, tr, td, th, i } = van.tags
-
-export class ThemeUtils {
-    constructor(engineUtils = new EngineUtils(chrome)) {
-        this.engineUtils = engineUtils
-    }
-    async setTheme(theme) {
-        if (theme !== UI_CONSTANTS.COLOR_PALETTES.DARK && theme !== UI_CONSTANTS.COLOR_PALETTES.LIGHT) {
-            const msg = `Supported themes are only ${UI_CONSTANTS.COLOR_PALETTES.DARK} and ${UI_CONSTANTS.COLOR_PALETTES.LIGHT}`
-            console.error(msg)
-            throw new Error(msg)
-        }
-        return await this.engineUtils.storageSet({ [STORAGE_CONSTANTS.THEME.KEY]: theme })
-    }
-    async getTheme() {
-        const store = await this.engineUtils.storageGet()
-        const currentTheme = store[STORAGE_CONSTANTS.THEME.KEY]
-        if ((currentTheme !== UI_CONSTANTS.COLOR_PALETTES.DARK && currentTheme !== UI_CONSTANTS.COLOR_PALETTES.LIGHT)) {
-            return UI_CONSTANTS.COLOR_PALETTES.DEFAULT
-        } else {
-            return currentTheme
-        }
-    }
-    async getPoints() {
-        const points = await this.engineUtils.storageGet()
-        delete points[STORAGE_CONSTANTS.THEME.KEY]
-        return points
-    }
-    async removePoints(channelName) {
-        return await this.engineUtils.storageRemove(channelName)
-    }
-}
 
 export class InterfaceElementsBuilder {
     constructor(
         state = {},
-        themeUtils = new ThemeUtils()
+        storageUtils = new StorageUtils()
     ) {
         this.state = state
-        this.themeUtils = themeUtils
+        this.storageUtils = storageUtils
     }
     createContainer() {
         van.derive(() => {
@@ -88,7 +57,7 @@ export class InterfaceElementsBuilder {
                 div({
                         class: 'clear-button',
                         onclick: async () => {
-                            await this.themeUtils.removePoints(channelName)
+                            await this.storageUtils.removePoints(channelName)
                             deleter()
                         }
                     },
@@ -103,7 +72,7 @@ export class InterfaceElementsBuilder {
                 class: 'clear-button color-switcher',
                 onclick: async () => {
                     const theme = state.colorPalette === UI_CONSTANTS.COLOR_PALETTES.LIGHT ? UI_CONSTANTS.COLOR_PALETTES.DARK : UI_CONSTANTS.COLOR_PALETTES.LIGHT
-                    await this.themeUtils.setTheme(theme)
+                    await this.storageUtils.setTheme(theme)
                     state.colorPalette = theme
                 },
                 title: UI_CONSTANTS.CHANGE_THEME_TITLE
@@ -126,21 +95,21 @@ export class TwitchInterfaceUpdater {
         colorPalette = STORAGE_CONSTANTS.THEME.DEFAULT_VALUE,
         points = {},
         refreshInterval = 5000,
-        themeUtils = new ThemeUtils()
+        storageUtils = new StorageUtils()
     ) {
         this.refreshInterval = refreshInterval
-        this.themeUtils = themeUtils
+        this.storageUtils = storageUtils
         this.state = vanX.reactive({
             points: points,
             colorPalette: colorPalette
         })
-        this.interfaceElementsBuilder = new InterfaceElementsBuilder(this.state, this.themeUtils)
+        this.interfaceElementsBuilder = new InterfaceElementsBuilder(this.state, this.storageUtils)
     }
     createInterface() {
         van.add(document.body, this.interfaceElementsBuilder.createContainer())
     }
     async checkForChanges() {
-        const newPoints = await this.themeUtils.getPoints()
+        const newPoints = await this.storageUtils.getPoints()
         for (const point in this.state.points) {
             if (!newPoints.hasOwnProperty(point)) {
                 delete this.state.points[point]
@@ -155,13 +124,13 @@ export class TwitchInterfaceUpdater {
 }
 
 export const init = () => {
-    Promise.resolve(new ThemeUtils()).then(themeUtils => {
+    Promise.resolve(new StorageUtils()).then(storageUtils => {
         Promise.all([
-            themeUtils.getTheme(),
-            themeUtils.getPoints()
+            storageUtils.getTheme(),
+            storageUtils.getPoints()
         ]).then(([theme, points]) => {
             const twitchInterfaceUpdater = new TwitchInterfaceUpdater(
-                theme, points, 5000, themeUtils
+                theme, points, 5000, storageUtils
             )
             twitchInterfaceUpdater
                 .checkForChanges()
@@ -171,5 +140,4 @@ export const init = () => {
             }, twitchInterfaceUpdater.refreshInterval)
         })
     })
-
 }

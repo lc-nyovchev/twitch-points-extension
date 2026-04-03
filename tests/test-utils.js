@@ -1,5 +1,5 @@
-import {vi} from "vitest"
-import {EngineUtils} from "../src/utils/twitch-points-extension-utils.js"
+import { vi } from 'vitest'
+import { EngineUtils } from '../src/utils/twitch-points-extension-utils.js'
 
 export default {
     namedMock: name => vi.fn().mockName(name),
