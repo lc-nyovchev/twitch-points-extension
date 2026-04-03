@@ -22,11 +22,35 @@ describe('ThemeUtils', () => {
 
             expect(engineUtils.storageSet).toHaveBeenCalledWith({ [STORAGE_CONSTANTS.THEME.KEY]: 'light' })
         })
-        it('should throw error on unsupported theme', async ({themeUtils, engineUtils}) => {
+        it('should throw error on unsupported theme', async ({ themeUtils, engineUtils }) => {
             await expect(themeUtils.setTheme('unsupported theme'))
                 .rejects
                 .toThrow('Supported themes are only dark and light')
             expect(engineUtils.storageSet).not.toHaveBeenCalled()
+        })
+    })
+    describe('getTheme', () => {
+        it('should return the dark theme by default', async ({ themeUtils, engineUtils }) => {
+            engineUtils.storageGet.mockResolvedValueOnce({})
+
+            const theme = await themeUtils.getTheme()
+
+            expect(theme).toBe('dark')
+            expect(engineUtils.storageGet).toHaveBeenCalled()
+        })
+        it('should return the correct theme if set', async ({ themeUtils, engineUtils }) => {
+            engineUtils.storageGet.mockResolvedValueOnce({ [STORAGE_CONSTANTS.THEME.KEY]: 'light' })
+
+            const theme = await themeUtils.getTheme()
+
+            expect(theme).toBe('light')
+            expect(engineUtils.storageGet).toHaveBeenCalled()
+        })
+    })
+    describe('getPoints', () => {
+        it('should return the correct points if set', async ({ themeUtils, engineUtils }) => {
+            engineUtils.storageGet.mockResolvedValueOnce({'grubby': '420'})
+
         })
     })
 })
