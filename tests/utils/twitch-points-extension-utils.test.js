@@ -146,7 +146,7 @@ describe('StorageUtils', () => {
 
             expect(points).toEqual({ grubby: 420 })
         })
-        it('should ignore the theme if set',async ({ storageUtils, engineUtils }) => {
+        it('should ignore the theme if set', async ({ storageUtils, engineUtils }) => {
             engineUtils.storageGet.mockResolvedValueOnce({
                 back2Warcraft: '1911',
                 [STORAGE_CONSTANTS.THEME.KEY]: 'light',
@@ -168,13 +168,32 @@ describe('StorageUtils', () => {
             expect(points).toBe(420)
             expect(engineUtils.storageGet).toHaveBeenCalled()
         })
-        it('should return 0 if channel doesnt exist',  async ({ storageUtils, engineUtils }) => {
+        it('should return 0 if channel doesnt exist', async ({ storageUtils, engineUtils }) => {
             engineUtils.storageGet.mockResolvedValueOnce({ 'grubby': '420' })
 
             const points = await storageUtils.getPointsForChannel('grubby-with-a-moustache')
 
             expect(points).toBe(0)
             expect(engineUtils.storageGet).toHaveBeenCalled()
+        })
+    })
+    describe('setPoints', () => {
+        it('should call the proper internals', async ({ storageUtils, engineUtils }) => {
+            const channelName = 'grubby'
+            const points = 420
+
+            await storageUtils.setPoints(channelName, points)
+
+            expect(engineUtils.storageSet).toHaveBeenCalledWith({ [channelName]: points })
+        })
+    })
+    describe('removePoints', () => {
+        it('should call the proper internals', async ({ storageUtils, engineUtils }) => {
+            const channelName = 'grubby'
+
+            await storageUtils.removePoints(channelName)
+
+            expect(engineUtils.storageRemove).toHaveBeenCalledWith(channelName)
         })
     })
 })
