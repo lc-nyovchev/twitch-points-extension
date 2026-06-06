@@ -10,9 +10,10 @@
   "author": "lc-nyovchev",
   "license": "MIT",
   "devDependencies": {
-    "vite": "^8.0.5",
-    "vitest": "^4.1.0",
+    "vite": "^8.0.16",
+    "vitest": "^4.1.8",
     "vanjs-core": "^1.6.0",
-    "vanjs-ext": "^0.6.3"
+    "vanjs-ext": "^0.6.3",
+    "jsdom": "^29.1.1"
   }
 }
