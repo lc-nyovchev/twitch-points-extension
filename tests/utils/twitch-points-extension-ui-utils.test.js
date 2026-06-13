@@ -96,5 +96,20 @@ describe('ui-utils', () => {
 				})
 			})
 		})
+		describe('createTableHeader', () => {
+			it('should generate the proper table header', async ({ interfaceBuilder }) => {
+				const tableHeader = testUtils.mockVanJSRender(interfaceBuilder.createTableHeader())
+
+				expect(tableHeader.outerHTML).toMatchInlineSnapshot(testUtils.sanitizeHtml(`
+					<thead>
+						<tr>
+							<th>${UI_CONSTANTS.TABLE_HEADERS.CHANNEL_NAME}</th>
+							<th>${UI_CONSTANTS.TABLE_HEADERS.POINTS}</th>
+							<th>${UI_CONSTANTS.TABLE_HEADERS.DELETE}</th>
+						</tr>
+					</thead>
+				`))
+			})
+		})
 	})
 })

@@ -34,12 +34,6 @@ export class InterfaceElementsBuilder {
 			this.createColorPaletteSwitcher(state)
 		)
 	}
-	createTable(points) {
-		return table(
-			this.createTableHeader(),
-			vanX.list(tbody, points, (score, deleter, channelName) => this.createTableRow(score, deleter, channelName))
-		)
-	}
 	createTableHeader() {
 		return thead(
 			tr(
@@ -49,7 +43,6 @@ export class InterfaceElementsBuilder {
 			)
 		)
 	}
-
 	createTableRow(score, deleter, channelName) {
 		return tr(
 			td(channelName),
@@ -65,6 +58,12 @@ export class InterfaceElementsBuilder {
 					i({ class: 'fa-solid fa-trash fa-xs', title: 'Delete' })
 				)
 			)
+		)
+	}
+	createTable(points) {
+		return table(
+			this.createTableHeader(),
+			vanX.list(tbody, points, (score, deleter, channelName) => this.createTableRow(score, deleter, channelName))
 		)
 	}
 	createColorPaletteSwitcher(state) {
