@@ -111,5 +111,64 @@ describe('ui-utils', () => {
 				`))
 			})
 		})
+		describe('createTable', () => {
+			it('should generate the proper table', async ({ interfaceBuilder }) => {
+				const points = vanX.reactive({ 'grubby': 420, 'back2Warcraft': 1911 })
+
+				const table = testUtils.mockVanJSRender(interfaceBuilder.createTable(points))
+
+				expect(table.outerHTML).toMatchInlineSnapshot(testUtils.sanitizeHtml(`
+					<table>
+						<thead>
+							<tr>
+								<th>${UI_CONSTANTS.TABLE_HEADERS.CHANNEL_NAME}</th>
+								<th>${UI_CONSTANTS.TABLE_HEADERS.POINTS}</th>		
+								<th>${UI_CONSTANTS.TABLE_HEADERS.DELETE}</th>
+							</tr>	
+						</thead>
+						<tbody>
+							<tr>
+								<td>grubby</td>
+								<td>420</td>
+								<td>
+									<div class="clear-button">
+										<i class="fa-solid fa-trash fa-xs" title="${UI_CONSTANTS.TABLE_ROWS.CONTROLS.DELETE_BUTTON_TITLE}"></i> 
+									</div>
+								</td>
+							</tr>
+							<tr>
+								<td>back2Warcraft</td>
+								<td>1911</td>
+								<td>
+									<div class="clear-button">
+										<i class="fa-solid fa-trash fa-xs" title="${UI_CONSTANTS.TABLE_ROWS.CONTROLS.DELETE_BUTTON_TITLE}"></i> 
+									</div> 
+								</td>
+							</tr>
+						</tbody>
+					</table>
+				`))
+			})
+			it('should delete the row when delete is pressed', async ({ interfaceBuilder, storageUtils }) => {
+				const points = vanX.reactive({'grubby': 420, 'back2Warcraft': 1911})
+				const removePointsSpy = vi.spyOn(storageUtils, 'removePoints')
+				const table = testUtils.mockVanJSRender(interfaceBuilder.createTable(points))
+				const rows = table.querySelectorAll('tbody tr')
+
+				expect(rows).toHaveLength(2)
+
+				rows[0].querySelector('.clear-button')
+					.click()
+
+				await testUtils.verifyAsync(async () => {
+					expect(vanX.compact(points)).toEqual({ 'back2Warcraft': 1911 })
+					expect(removePointsSpy).toHaveBeenCalledWith('grubby')
+
+					const newRows = table.querySelectorAll('tbody tr')
+					expect(newRows).toHaveLength(1)
+					expect(newRows[0].querySelector('td').textContent).toBe('back2Warcraft')
+				})
+			})
+		})
 	})
 })

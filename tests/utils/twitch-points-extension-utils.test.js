@@ -16,6 +16,9 @@ describe('UI_CONSTANTS', () => {
 		expect(UI_CONSTANTS.TABLE_HEADERS.POINTS).toBe('Points')
 		expect(UI_CONSTANTS.TABLE_HEADERS.DELETE).toBe('Delete')
 	})
+	it('should have the correct delete button title', () => {
+		expect(UI_CONSTANTS.TABLE_ROWS.CONTROLS.DELETE_BUTTON_TITLE).toBe('Delete')
+	})
 	it('should have the correct change theme title', () => {
 		expect(UI_CONSTANTS.CHANGE_THEME_TITLE).toBe('Change theme')
 	})

@@ -55,7 +55,7 @@ export class InterfaceElementsBuilder {
 							deleter()
 						}
 					},
-					i({ class: 'fa-solid fa-trash fa-xs', title: 'Delete' })
+					i({ class: 'fa-solid fa-trash fa-xs', title: UI_CONSTANTS.TABLE_ROWS.CONTROLS.DELETE_BUTTON_TITLE })
 				)
 			)
 		)

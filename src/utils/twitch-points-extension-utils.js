@@ -10,6 +10,11 @@ export const UI_CONSTANTS = {
         POINTS: 'Points',
         DELETE: 'Delete'
     },
+    TABLE_ROWS: {
+        CONTROLS: {
+            DELETE_BUTTON_TITLE: 'Delete'
+        }
+    },
     CHANGE_THEME_TITLE: 'Change theme',
     CONTROLS: {
         DEDICATION: {
