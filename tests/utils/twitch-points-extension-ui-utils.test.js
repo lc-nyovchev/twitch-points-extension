@@ -150,7 +150,7 @@ describe('ui-utils', () => {
 				`))
 			})
 			it('should delete the row when delete is pressed', async ({ interfaceBuilder, storageUtils }) => {
-				const points = vanX.reactive({'grubby': 420, 'back2Warcraft': 1911})
+				const points = vanX.reactive({ 'grubby': 420, 'back2Warcraft': 1911 })
 				const removePointsSpy = vi.spyOn(storageUtils, 'removePoints')
 				const table = testUtils.mockVanJSRender(interfaceBuilder.createTable(points))
 				const rows = table.querySelectorAll('tbody tr')
@@ -167,6 +167,55 @@ describe('ui-utils', () => {
 					const newRows = table.querySelectorAll('tbody tr')
 					expect(newRows).toHaveLength(1)
 					expect(newRows[0].querySelector('td').textContent).toBe('back2Warcraft')
+				})
+			})
+		})
+		describe('createColorPaletteSwitcher', () => {
+			it('should generate the proper default colorPaletteSwitcher with no state', async ({ interfaceBuilder }) => {
+				const state = vanX.reactive({})
+
+				const colorPaletteSwitcher = testUtils.mockVanJSRender(interfaceBuilder.createColorPaletteSwitcher(state))
+
+				expect(colorPaletteSwitcher.outerHTML).toMatchInlineSnapshot(testUtils.sanitizeHtml(`
+					<div class="clear-button color-switcher" title="${UI_CONSTANTS.CHANGE_THEME_TITLE}">
+						<i class="fa-regular fa-moon fa-lg"></i>
+					</div>
+				`))
+			})
+			it('should generate the light colorPaletteSwitcher if state is light', async ({ interfaceBuilder }) => {
+				const state = vanX.reactive({ colorPalette: UI_CONSTANTS.COLOR_PALETTES.LIGHT })
+
+				const colorPaletteSwitcher = testUtils.mockVanJSRender(interfaceBuilder.createColorPaletteSwitcher(state))
+
+				expect(colorPaletteSwitcher.outerHTML).toMatchInlineSnapshot(testUtils.sanitizeHtml(`
+					<div class="clear-button color-switcher" title="${UI_CONSTANTS.CHANGE_THEME_TITLE}">
+						<i class="fa-regular fa-sun fa-lg"></i>
+					</div>
+				`))
+			})
+			it('should toggle the theme upon click', async ({ interfaceBuilder, storageUtils }) => {
+				const state = vanX.reactive({ colorPalette: UI_CONSTANTS.COLOR_PALETTES.DARK })
+				const setThemeSpy = vi.spyOn(storageUtils, 'setTheme')
+
+				const colorPaletteSwitcher = testUtils.mockVanJSRender(interfaceBuilder.createColorPaletteSwitcher(state))
+
+				expect(colorPaletteSwitcher.outerHTML).toMatchInlineSnapshot(testUtils.sanitizeHtml(`
+					<div class="clear-button color-switcher" title="${UI_CONSTANTS.CHANGE_THEME_TITLE}">
+						<i class="fa-regular fa-moon fa-lg"></i>
+					</div>
+				`))
+
+				colorPaletteSwitcher
+					.click()
+
+				await testUtils.verifyAsync(async () => {
+					expect(state.colorPalette).toBe(UI_CONSTANTS.COLOR_PALETTES.LIGHT)
+					expect(setThemeSpy).toHaveBeenCalledWith(UI_CONSTANTS.COLOR_PALETTES.LIGHT)
+					expect(colorPaletteSwitcher.outerHTML).toMatchInlineSnapshot(testUtils.sanitizeHtml(`
+						<div class="clear-button color-switcher" title="${UI_CONSTANTS.CHANGE_THEME_TITLE}">
+							<i class="fa-regular fa-sun fa-lg"></i>
+						</div>
+					`))
 				})
 			})
 		})
